@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Structured binary data with zubin</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Structured binary data with zubin</h1>
+
+
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(zubin)</span></code></pre></div>
+<p>Binary formats are described in their specifications as tables of
+fields: a name, a type, a width, an offset. zubin lets you write that
+table down once, as a <em>layout</em>, and then read or write any number
+of records in one call. Offsets are 0-based throughout, as in every
+specification.</p>
+<div id="layouts" class="section level2">
+<h2>Layouts</h2>
+<p>A layout is a string of fields, <code>name:type</code>, with an
+optional byte order prefix: <code>&lt;</code> little, <code>&gt;</code>
+big, <code>=</code> the host’s.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>wav <span class="ot">&lt;-</span> <span class="fu">bin_layout</span>(<span class="st">&quot;&lt;riff:s4 size:u32 wave:s4 fmt:s4 fmt_size:u32 format:u16 channels:u16</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="st">                   rate:u32 byte_rate:u32 block_align:u16 bits:u16 data:s4 data_size:u32&quot;</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>wav</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="co">#&gt; &lt;zubin_layout: 44 bytes, 13 fields&gt;</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="co">#&gt;  name        type count size offset endian</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="co">#&gt;  riff        s4   1     4     0           </span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="co">#&gt;  size        u32  1     4     4     little</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="co">#&gt;  wave        s4   1     4     8           </span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="co">#&gt;  fmt         s4   1     4    12           </span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#&gt;  fmt_size    u32  1     4    16     little</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co">#&gt;  format      u16  1     2    20     little</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co">#&gt;  channels    u16  1     2    22     little</span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="co">#&gt;  rate        u32  1     4    24     little</span></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="co">#&gt;  byte_rate   u32  1     4    28     little</span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="co">#&gt;  block_align u16  1     2    32     little</span></span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="co">#&gt;  bits        u16  1     2    34     little</span></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="co">#&gt;  data        s4   1     4    36           </span></span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a><span class="co">#&gt;  data_size   u32  1     4    40     little</span></span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a><span class="fu">bin_size</span>(wav)</span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a><span class="co">#&gt; [1] 44</span></span></code></pre></div>
+<p>The types are the integers <code>u8</code> to <code>i128</code>, the
+floats <code>f16</code>, <code>bf16</code>, <code>f32</code> and
+<code>f64</code>, the complex numbers <code>c64</code> and
+<code>c128</code>, <code>bool</code>, fixed bytes
+<code>b&lt;n&gt;</code> and fixed strings <code>s&lt;n&gt;</code>,
+padding <code>x&lt;n&gt;</code>, and arrays of the numeric types,
+<code>f32[3]</code>. A field can override the prefix with
+<code>.le</code> or <code>.be</code>.</p>
+<table>
+<colgroup>
+<col width="25%" />
+<col width="25%" />
+<col width="25%" />
+<col width="25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Spec</th>
+<th>Bytes</th>
+<th>R type on unpack</th>
+<th>On pack, accepts</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>u8 i8 u16 i16</code></td>
+<td>1–2</td>
+<td>integer</td>
+<td>integer, whole double, logical</td>
+</tr>
+<tr class="even">
+<td><code>i32</code></td>
+<td>4</td>
+<td>integer; −2^31 is an error unless <code>na = &quot;allow&quot;</code></td>
+<td>integer, whole double</td>
+</tr>
+<tr class="odd">
+<td><code>u32</code></td>
+<td>4</td>
+<td>double</td>
+<td>integer, whole double</td>
+</tr>
+<tr class="even">
+<td><code>i64 u64</code></td>
+<td>8</td>
+<td>double, exact to 2^53, or <code>integer64</code></td>
+<td>integer, whole double, <code>integer64</code></td>
+</tr>
+<tr class="odd">
+<td><code>i128 u128</code></td>
+<td>16</td>
+<td>as <code>i64 u64</code></td>
+<td>integer, whole double, <code>integer64</code></td>
+</tr>
+<tr class="even">
+<td><code>f16 bf16 f32 f64</code></td>
+<td>2–8</td>
+<td>double</td>
+<td>numeric, rounded to nearest even</td>
+</tr>
+<tr class="odd">
+<td><code>c64 c128</code></td>
+<td>8, 16</td>
+<td>complex</td>
+<td>complex, or numeric as a real part</td>
+</tr>
+<tr class="even">
+<td><code>bool</code></td>
+<td>1</td>
+<td>logical</td>
+<td>logical</td>
+</tr>
+<tr class="odd">
+<td><code>b&lt;n&gt;</code></td>
+<td>n</td>
+<td>list of raw</td>
+<td>list of raw, each n bytes</td>
+</tr>
+<tr class="even">
+<td><code>s&lt;n&gt;</code></td>
+<td>n</td>
+<td>character, up to the first NUL</td>
+<td>character of at most n UTF-8 bytes</td>
+</tr>
+<tr class="odd">
+<td><code>x&lt;n&gt;</code></td>
+<td>n</td>
+<td>not returned</td>
+<td>not given; written as zeros</td>
+</tr>
+<tr class="even">
+<td><code>t[k]</code></td>
+<td>k × width</td>
+<td>matrix of k columns</td>
+<td>matrix of k columns</td>
+</tr>
+</tbody>
+</table>
+<p>Nothing is ever rounded into an integer, wrapped or truncated: a
+value that does not fit its field is an error naming the field and the
+record.</p>
+</div>
+<div id="writing-and-reading-a-wav-file" class="section level2">
+<h2>Writing and reading a WAV file</h2>
+<p><code>bin_encode()</code> turns a vector into bytes of one type, here
+one second of a 440 Hz tone as 16-bit samples, and
+<code>bin_pack()</code> writes one header record from named values.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>samples <span class="ot">&lt;-</span> <span class="fu">bin_encode</span>(<span class="fu">round</span>(<span class="dv">32767</span> <span class="sc">*</span> <span class="fu">sin</span>(<span class="dv">2</span> <span class="sc">*</span> pi <span class="sc">*</span> <span class="dv">440</span> <span class="sc">*</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">by =</span> <span class="dv">1</span> <span class="sc">/</span> <span class="dv">8000</span>))), <span class="st">&quot;i16&quot;</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>hdr <span class="ot">&lt;-</span> <span class="fu">bin_pack</span>(wav, <span class="at">riff =</span> <span class="st">&quot;RIFF&quot;</span>, <span class="at">size =</span> <span class="dv">36</span> <span class="sc">+</span> <span class="fu">length</span>(samples), <span class="at">wave =</span> <span class="st">&quot;WAVE&quot;</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>                <span class="at">fmt =</span> <span class="st">&quot;fmt &quot;</span>, <span class="at">fmt_size =</span> <span class="dv">16</span>, <span class="at">format =</span> <span class="dv">1</span>, <span class="at">channels =</span> <span class="dv">1</span>, <span class="at">rate =</span> <span class="dv">8000</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>                <span class="at">byte_rate =</span> <span class="dv">16000</span>, <span class="at">block_align =</span> <span class="dv">2</span>, <span class="at">bits =</span> <span class="dv">16</span>, <span class="at">data =</span> <span class="st">&quot;data&quot;</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>                <span class="at">data_size =</span> <span class="fu">length</span>(samples))</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>path <span class="ot">&lt;-</span> <span class="fu">tempfile</span>(<span class="at">fileext =</span> <span class="st">&quot;.wav&quot;</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="fu">writeBin</span>(<span class="fu">c</span>(hdr, samples), path)</span></code></pre></div>
+<p>Reading it back is the same two steps in reverse: the header as a
+one-row data frame, then the samples from the byte after it.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">readBin</span>(path, <span class="st">&quot;raw&quot;</span>, <span class="fu">file.size</span>(path))</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>h <span class="ot">&lt;-</span> <span class="fu">bin_unpack</span>(x, wav, <span class="at">n =</span> <span class="dv">1</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>h[, <span class="fu">c</span>(<span class="st">&quot;channels&quot;</span>, <span class="st">&quot;rate&quot;</span>, <span class="st">&quot;bits&quot;</span>, <span class="st">&quot;data_size&quot;</span>)]</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt;   channels rate bits data_size</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt; 1        1 8000   16     16002</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>pcm <span class="ot">&lt;-</span> <span class="fu">bin_decode</span>(x, <span class="st">&quot;i16&quot;</span>, <span class="at">offset =</span> <span class="fu">bin_size</span>(wav), <span class="at">n =</span> h<span class="sc">$</span>data_size <span class="sc">/</span> <span class="dv">2</span>)</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="fu">head</span>(pcm)</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt; [1]     0 11099 20886 28204 32187 32364</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="fu">bin_hexdump</span>(x, <span class="at">n =</span> <span class="dv">48</span>)</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt; 00000000: 5249 4646 a63e 0000 5741 5645 666d 7420  RIFF.&gt;..WAVEfmt </span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt; 00000010: 1000 0000 0100 0100 401f 0000 803e 0000  ........@....&gt;..</span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt; 00000020: 0200 1000 6461 7461 823e 0000 0000 5b2b  ....data.&gt;....[+</span></span></code></pre></div>
+</div>
+<div id="records-a-builder-and-big-endian-data" class="section level2">
+<h2>Records, a builder, and big-endian data</h2>
+<p>A file of records behind a header, built with a byte builder, which
+grows without copying everything on each append:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>hdr <span class="ot">&lt;-</span> <span class="fu">bin_layout</span>(<span class="st">&quot;&gt;magic:u32 version:u16 count:u32&quot;</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>rec <span class="ot">&lt;-</span> <span class="fu">bin_layout</span>(<span class="st">&quot;&gt;id:u32 ts:i64 price:f64 qty:i32 side:u8 x3&quot;</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>trades <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">id =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>, <span class="at">ts =</span> <span class="fl">1.7e12</span> <span class="sc">+</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">15</span>, <span class="dv">40</span>, <span class="dv">41</span>),</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>                     <span class="at">price =</span> <span class="fu">c</span>(<span class="fl">101.5</span>, <span class="fl">101.25</span>, <span class="fl">101.75</span>, <span class="fl">101.5</span>),</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>                     <span class="at">qty =</span> <span class="fu">c</span>(<span class="dv">100</span><span class="dt">L</span>, <span class="dv">50</span><span class="dt">L</span>, <span class="dv">75</span><span class="dt">L</span>, <span class="dv">10</span><span class="dt">L</span>), <span class="at">side =</span> <span class="fu">c</span>(<span class="dv">1</span><span class="dt">L</span>, <span class="dv">2</span><span class="dt">L</span>, <span class="dv">1</span><span class="dt">L</span>, <span class="dv">2</span><span class="dt">L</span>))</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>b <span class="ot">&lt;-</span> <span class="fu">bin_builder</span>()</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="fu">bin_put</span>(b, <span class="fu">bin_pack</span>(hdr, <span class="at">magic =</span> <span class="dv">0xCAFEBABE</span>, <span class="at">version =</span> <span class="dv">1</span>, <span class="at">count =</span> <span class="fu">nrow</span>(trades)))</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="fu">bin_put</span>(b, <span class="fu">bin_pack</span>(rec, trades))</span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>b</span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt; &lt;zubin_builder: 122 bytes, capacity 256, max none&gt;</span></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>path <span class="ot">&lt;-</span> <span class="fu">tempfile</span>()</span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="fu">writeBin</span>(<span class="fu">bin_take</span>(b), path)</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">readBin</span>(path, <span class="st">&quot;raw&quot;</span>, <span class="fu">file.size</span>(path))</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>h <span class="ot">&lt;-</span> <span class="fu">bin_unpack</span>(x, hdr, <span class="at">n =</span> <span class="dv">1</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>h<span class="sc">$</span>magic <span class="sc">==</span> <span class="dv">0xCAFEBABE</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="fu">bin_unpack</span>(x, rec, <span class="at">offset =</span> <span class="fu">bin_size</span>(hdr), <span class="at">n =</span> h<span class="sc">$</span>count)</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt;   id      ts  price qty side</span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt; 1  1 1.7e+12 101.50 100    1</span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt; 2  2 1.7e+12 101.25  50    2</span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt; 3  3 1.7e+12 101.75  75    1</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt; 4  4 1.7e+12 101.50  10    2</span></span></code></pre></div>
+<p><code>bin_put()</code> also encodes vectors directly, so a writer
+that does not have whole records at hand appends field by field:
+<code>bin_put(b, x, type = &quot;f32&quot;, endian = &quot;big&quot;)</code>. Strings append
+as C strings (<code>type = &quot;z&quot;</code>) or fixed fields
+(<code>type = &quot;s16&quot;</code>).</p>
+</div>
+<div id="c-structs" class="section level2">
+<h2>C structs</h2>
+<p>With <code>align = TRUE</code> each field is placed at a multiple of
+its own width and the record is padded to the widest, as a C compiler
+lays out a struct on 64-bit targets. A
+<code>struct { uint8_t a; uint32_t b; uint16_t c; }</code> written with
+<code>fwrite()</code>:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>s <span class="ot">&lt;-</span> <span class="fu">bin_layout</span>(<span class="st">&quot;=a:u8 b:u32 c:u16&quot;</span>, <span class="at">align =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>s<span class="sc">$</span>fields</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co">#&gt;   name type count size offset endian</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co">#&gt; 1    a   u8     1    1      0   &lt;NA&gt;</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co">#&gt; 2    b  u32     1    4      4 little</span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#&gt; 3    c  u16     1    2      8 little</span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="fu">bin_size</span>(s)</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt; [1] 12</span></span></code></pre></div>
+</div>
+<div id="arrays-and-64-bit-integers" class="section level2">
+<h2>Arrays and 64-bit integers</h2>
+<p>Array fields are matrices in list mode and expand to
+<code>name.1</code>, <code>name.2</code>, … in a data frame:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>pts <span class="ot">&lt;-</span> <span class="fu">bin_layout</span>(<span class="st">&quot;&lt;id:u16 xyz:f32[3]&quot;</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">bin_pack</span>(pts, <span class="at">id =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>, <span class="at">xyz =</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">5</span>), <span class="dv">2</span>))</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="fu">bin_unpack</span>(x, pts)</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a><span class="co">#&gt;   id xyz.1 xyz.2 xyz.3</span></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a><span class="co">#&gt; 1  1     0     2     4</span></span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="co">#&gt; 2  2     1     3     5</span></span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="fu">bin_unpack</span>(x, pts, <span class="at">as =</span> <span class="st">&quot;list&quot;</span>)<span class="sc">$</span>xyz</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="co">#&gt;      [,1] [,2] [,3]</span></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a><span class="co">#&gt; [1,]    0    2    4</span></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a><span class="co">#&gt; [2,]    1    3    5</span></span></code></pre></div>
+<p>A 64-bit integer reads as a double when it is exactly representable,
+and is an error when it is not; <code>int64 = &quot;integer64&quot;</code> returns
+the bits as the bit64 package’s class instead:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>big <span class="ot">&lt;-</span> <span class="fu">bin_encode</span>(<span class="dv">2</span><span class="sc">^</span><span class="dv">53</span>, <span class="st">&quot;u64&quot;</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="fu">bin_decode</span>(big, <span class="st">&quot;u64&quot;</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="co">#&gt; [1] 9.007199e+15</span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="fu">try</span>(<span class="fu">bin_decode</span>(<span class="fu">bin_encode</span>(<span class="dv">2</span><span class="sc">^</span><span class="dv">53</span> <span class="sc">+</span> <span class="dv">2</span>, <span class="st">&quot;u64&quot;</span>), <span class="st">&quot;u64&quot;</span>))</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="co">#&gt; Error in bin_decode() : The value of record 0 has no exact R value.</span></span></code></pre></div>
+</div>
+<div id="finding-where-two-files-differ" class="section level2">
+<h2>Finding where two files differ</h2>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>a <span class="ot">&lt;-</span> <span class="fu">bin_pack</span>(rec, trades)</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>b <span class="ot">&lt;-</span> a</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>b[<span class="fu">c</span>(<span class="dv">9</span>, <span class="dv">50</span>)] <span class="ot">&lt;-</span> <span class="fu">as.raw</span>(<span class="dv">0</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a><span class="fu">bin_diff</span>(a, b)</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a><span class="co">#&gt;   offset  a  b</span></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a><span class="co">#&gt; 1      8 cf 00</span></span></code></pre></div>
+</div>
+<div id="errors" class="section level2">
+<h2>Errors</h2>
+<p>Every error zubin raises inherits <code>zubin_error</code> and has a
+class saying what went wrong, with the details as fields, so code can
+catch it by kind:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>e <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(<span class="fu">bin_encode</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">300</span>), <span class="st">&quot;u8&quot;</span>), <span class="at">zubin_range_error =</span> <span class="cf">function</span>(e) e)</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="fu">c</span>(e<span class="sc">$</span>index, <span class="fu">class</span>(e)[<span class="dv">1</span>])</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a><span class="co">#&gt; [1] &quot;1&quot;                 &quot;zubin_range_error&quot;</span></span></code></pre></div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

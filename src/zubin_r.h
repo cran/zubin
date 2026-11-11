@@ -1,0 +1,80 @@
+/* Declarations of the .Call entry points registered in init.c. */
+#ifndef ZUBIN_R_H
+#define ZUBIN_R_H
+
+#define R_NO_REMAP
+#include <R.h>
+#include <Rinternals.h>
+
+/* Every buffer the glue creates is counted, so test-lifetime.R can prove
+   that an error or an interrupt leaks none (design 16.3). */
+extern long zubin_int_live_buffers;
+#define ZB_INT_R_ON_NEW()  (zubin_int_live_buffers++)
+#define ZB_INT_R_ON_FREE() (zubin_int_live_buffers--)
+#include <zubin.h>
+#include <zubin/layout.h>
+#include <zubin-r.h>
+
+/* zubin_r.c: shared with the harness */
+SEXP zubin_int_status(zb_status st, R_xlen_t index);
+SEXP zubin_int_failure(const char *name, R_xlen_t index, int field);
+int zubin_int_size(SEXP x, size_t *out);
+zb_status zubin_int_parse(SEXP spec, int big, int align, uint32_t max_fields,
+                          zb_layout *out, size_t *err_pos, int check_names);
+
+/* zubin_r.c */
+SEXP zubin_info(void);
+SEXP zubin_builder_new(SEXP reserve, SEXP max);
+SEXP zubin_builder_state(SEXP ptr);
+SEXP zubin_builder_put_raw(SEXP ptr, SEXP x);
+SEXP zubin_builder_put_str(SEXP ptr, SEXP x, SEXP width);
+SEXP zubin_builder_reserve(SEXP ptr, SEXP n);
+SEXP zubin_builder_reset(SEXP ptr);
+SEXP zubin_builder_take(SEXP ptr, SEXP reset);
+SEXP zubin_layout_parse(SEXP spec, SEXP big, SEXP align);
+SEXP zubin_unpack(SEXP x, SEXP spec, SEXP align, SEXP offset, SEXP n, SEXP stride,
+                  SEXP int64, SEXP allow_na, SEXP encoding);
+SEXP zubin_pack(SEXP spec, SEXP align, SEXP cols, SEXP is64, SEXP n, SEXP allow_na);
+SEXP zubin_builder_put_typed(SEXP ptr, SEXP spec, SEXP col, SEXP is64);
+SEXP zubin_hexdump(SEXP x, SEXP offset, SEXP n, SEXP width);
+SEXP zubin_diff(SEXP a, SEXP b, SEXP n);
+SEXP zubin_serialize(SEXP ptr, SEXP x, SEXP version, SEXP xdr, SEXP refhook);
+SEXP zubin_unserialize(SEXP x, SEXP offset, SEXP refhook);
+SEXP zubin_hash_object(SEXP x, SEXP bits, SEXP version, SEXP seed);
+
+/* zubin_test.c */
+SEXP zubin_test_status_string(SEXP codes);
+SEXP zubin_test_rw(SEXP type, SEXP endian, SEXP bytes);
+SEXP zubin_test_rw_write(SEXP type, SEXP endian, SEXP values);
+SEXP zubin_test_cursor(SEXP bytes, SEXP plan);
+SEXP zubin_test_live_buffers(void);
+SEXP zubin_test_buf_growth(SEXP chunk, SEXP total);
+SEXP zubin_test_buf_cap(SEXP reserve, SEXP max, SEXP puts);
+SEXP zubin_test_buf_borrow(SEXP bytes, SEXP puts);
+SEXP zubin_test_buf_put(SEXP type, SEXP endian, SEXP values, SEXP vectorised);
+SEXP zubin_test_buf_misc(void);
+SEXP zubin_test_put_then_error(SEXP fail);
+SEXP zubin_test_put_loop(SEXP chunk, SEXP times);
+SEXP zubin_test_buf_new_fail(void);
+SEXP zubin_test_kernel_types(void);
+SEXP zubin_test_layout(SEXP spec, SEXP big, SEXP align, SEXP max_fields);
+SEXP zubin_test_type_info(SEXP codes);
+SEXP zubin_test_struct_offsets(void);
+SEXP zubin_test_unpack_kernel(SEXP bytes, SEXP spec, SEXP n, SEXP stride);
+SEXP zubin_test_rw_u128(SEXP endian, SEXP bytes);
+SEXP zubin_test_rw_uint(SEXP endian, SEXP width, SEXP bytes);
+SEXP zubin_test_bitmap(SEXP bytes, SEXP offset, SEXP n, SEXP msb, SEXP idx, SEXP val);
+SEXP zubin_test_bits(SEXP bytes, SEXP offset, SEXP n, SEXP values);
+SEXP zubin_test_validity_apply(SEXP valid, SEXP offset, SEXP values, SEXP na);
+SEXP zubin_test_validity_from(SEXP values, SEXP offset, SEXP na);
+SEXP zubin_test_swap_copy(SEXP bytes, SEXP width, SEXP in_place);
+SEXP zubin_test_extbuf_new(SEXP len);
+SEXP zubin_test_extbuf_bytes(SEXP h);
+SEXP zubin_test_extbuf_release(SEXP h);
+SEXP zubin_test_extbuf_released(void);
+SEXP zubin_test_extbuf_misc(void);
+SEXP zubin_test_sink(SEXP x, SEXP version, SEXP xdr, SEXP skip, SEXP chunk);
+SEXP zubin_test_serialize_owned(SEXP x, SEXP refhook);
+SEXP zubin_test_unserialize_cursor(SEXP bytes, SEXP offset);
+
+#endif /* ZUBIN_R_H */
